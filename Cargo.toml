@@ -1,6 +1,7 @@
 [package]
 name = "real_time_dof_rendering"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["laochanlam <laochanlam@gmail.com>"]
 
 [dependencies]
+image = '*'
