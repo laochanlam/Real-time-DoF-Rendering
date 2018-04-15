@@ -5,3 +5,5 @@ authors = ["laochanlam <laochanlam@gmail.com>"]
 
 [dependencies]
 image = '*'
+num = '*'
+num-traits = "0.1.32"

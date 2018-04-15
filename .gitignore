@@ -1,3 +1,5 @@
 .DS_Store
 target
-data/output.bmp
+data/
+
+!data/input.bmp
