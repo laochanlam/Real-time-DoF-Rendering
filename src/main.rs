@@ -1,21 +1,17 @@
 extern crate image;
 extern crate num;
 extern crate num_traits;
+extern crate gtk;
+// import the macro of this crate
+#[macro_use]
+extern crate relm;
+#[macro_use]
+extern crate relm_derive;
 
-mod cayon;   // import test.rs
+use relm::Widget;
+
+mod gui;
 
 fn main() {
-    let img = image::open("data/input.bmp").unwrap();
-
-    // call library
-    // TODO: figure out the value of sigma
-    let sigma = 5f32;
-    let blur_img = img.blur(sigma);
-    let ref mut fout = std::fs::File::create("data/blurred.bmp").unwrap();
-    blur_img.save(fout, image::BMP).unwrap();
-
-    // call my function
-    let red_img = cayon::redden(img);
-    red_img.save("data/redden.bmp");
-
+    gui::Win::run(()).unwrap();
 }

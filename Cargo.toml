@@ -4,6 +4,12 @@ version = "0.1.1"
 authors = ["laochanlam <laochanlam@gmail.com>"]
 
 [dependencies]
+# Image manipulation
 image = '*'
+# TODO: describe this plz
 num = '*'
 num-traits = "0.1.32"
+# GUI library
+gtk = "^0.3.0"
+relm = "^0.11.0"
+relm-derive = "^0.11.0"
