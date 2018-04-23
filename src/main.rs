@@ -13,16 +13,21 @@ fn main() {
 
     let mut img = image::open("data/input.bmp").unwrap();
 
-    for n in 1..5{
+    for n in 0..5{
         let sigma = mipmap_level[n];
+        println!("{:} {:}",n,sigma);
         let blur_img = img.blur(sigma);
-        //println!("{}",pathblur[n]);
-        let ref mut fout = std::fs::File::create(pathblur[n-1].to_string()).unwrap();
+        let ref mut fout = std::fs::File::create(pathblur[n].to_string()).unwrap();
         blur_img.save(fout, image::BMP).unwrap();
 
 	    //call cayon's function
-	    let downsize_img = cayon::downsize(blur_img, (n) as u32);
-        downsize_img.save(pathdown[n-1].to_string());
+        let two: i32 = 2;
+	    let downsize_img = cayon::downsize(blur_img, (n+1) as u32);
+        downsize_img.save(pathdown[n].to_string());
+        // let mut resize_img = image::open(pathdown[n].to_string()).unwrap();
+        // resize_img = resize_img.resize(resize_img.width()/two.pow((n+1) as u32), resize_img.height()/two.pow((n+1) as u32), image::FilterType::Nearest);
+        // let ref mut fourr = std::fs::File::create(pathdown[n].to_string()).unwrap();
+        // resize_img.save(fourr, image::BMP);
     }
     // call library
     // TODO: figure out the value of sigma
