@@ -104,9 +104,9 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<u8>)
 						continue;
 					}
 
-					pixel_r[(i*height + j) as usize] += tup.0 / (r as f64);
-					pixel_g[(i*height + j) as usize] += tup.1 / (r as f64);
-					pixel_b[(i*height + j) as usize] += tup.2 / (r as f64);
+					pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
+					pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
+					pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
 				}
 			}
 		}
