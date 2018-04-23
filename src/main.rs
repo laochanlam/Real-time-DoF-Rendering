@@ -6,9 +6,9 @@ mod cayon;   // import test.rs
 
 fn main() {
     let img = image::open("data/input.bmp").unwrap();
-    let mut b = cayon::count_coc(&img);
-    let c = cayon::whatever(&img, &mut b);
-    c.save("data/haha.bmp");
+    let mut coc = cayon::count_coc(&img);
+    let img_render = cayon::whatever(&img, &mut coc);
+    img_render.save("data/haha.bmp");
 
     // // call library
     // // TODO: figure out the value of sigma
