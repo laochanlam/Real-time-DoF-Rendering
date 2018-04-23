@@ -14,6 +14,7 @@ use gtk::{
     ButtonExt,
     ContainerExt,
     Inhibit,
+    FileChooserExt,
     FileChooserButton,
     FileChooserAction,
     FileChooserButtonExt,
@@ -31,6 +32,8 @@ pub struct Model {
 pub struct Widgets {
     exit_button: Button,
     filechooser_button: FileChooserButton,
+    blur_button: Button,
+    preview_img: Image,
     window: Window,
 }
 
@@ -38,6 +41,7 @@ pub struct Widgets {
 pub enum Msg {
     Quit,
     Choose_file,
+    Blur,
 }
 
 pub struct Win {
@@ -57,9 +61,21 @@ impl Update for Win {
     }
     
     fn update(&mut self, event: Msg) {
+        let preview_img = &self.widgets.preview_img;
+        let filechooser_button = &self.widgets.filechooser_button;
+
         match event {
             Msg::Quit => gtk::main_quit(),
-            Msg::Choose_file => println!("HIHIHIH")
+            Msg::Choose_file => {
+                        let strr = filechooser_button.get_filename().unwrap().into_os_string().into_string().unwrap();
+                        let img_pixbuf = Pixbuf::new_from_file_at_size(&strr, 500, 500).unwrap();
+                        preview_img.set_from_pixbuf(&img_pixbuf);
+                        // let () = strr;
+                        println!("{}", strr);
+            },
+            Msg::Blur => {
+                
+            }
         }
     }
 }
@@ -79,25 +95,24 @@ impl Widget for Win {
         // Add botton into box
         let exit_button = Button::new_with_label("Exit");
         let filechooser_button = FileChooserButton::new("Select", FileChooserAction::Open);
+        let blur_button = Button::new_with_label("Blur");
         let window = Window::new(WindowType::Toplevel);
 
         let img_pixbuf = Pixbuf::new_from_file_at_size("data/input.bmp", 500, 500).unwrap();
-        let img = Image::new_from_pixbuf(&img_pixbuf);
-        // let img = Image::new_from_file("data/input.bmp");
-        // img.set_pixel_size(10);
-        vbox.add(&img);
+        let preview_img = Image::new_from_pixbuf(&img_pixbuf);
+        
+        vbox.add(&preview_img);
         vbox.add(&filechooser_button);
+        vbox.add(&blur_button);
         vbox.add(&exit_button);
-        // window.add(&vboxB);
         window.add(&vbox);
         // window.fullscreen();
 
         // Connect the signal `delete_event` to send the `Quit` message.
         connect!(relm, window, connect_delete_event(_, _), return (Some(Msg::Quit), Inhibit(false)));
         connect!(relm, exit_button, connect_clicked(_), Msg::Quit);
-        // TODO WHYYYYYY
         connect!(relm, filechooser_button, connect_file_set(_), Msg::Choose_file);
-        
+        connect!(relm, blur_button, connect_clicked(_), Msg::Blur);
         // TODO: find out the which stucture contains this fucking method
         window.show_all();
         
@@ -107,6 +122,8 @@ impl Widget for Win {
             widgets: Widgets {
                 exit_button,
                 filechooser_button,
+                blur_button,
+                preview_img,
                 window: window,
             }
         }
