@@ -6,9 +6,10 @@ use gtk::Orientation::{Vertical, Horizontal};
 
 // Widget
 use gtk::{
+    // GestureDrag,
     Window,
     WindowType,
-    GtkWindowExt,
+    // GtkWindowExt,
     WidgetExt,
     Button,
     ButtonExt,
@@ -20,7 +21,12 @@ use gtk::{
     FileChooserButtonExt,
     Image,
     ImageExt,
+    GestureMultiPress,
+    GestureMultiPressExt
+    
 };
+
+
 
 
 use self::gdk_pixbuf::Pixbuf;
@@ -35,6 +41,7 @@ pub struct Widgets {
     blur_button: Button,
     preview_img: Image,
     window: Window,
+    gesture_drag: GestureMultiPress,
 }
 
 #[derive(Msg)]
@@ -42,6 +49,7 @@ pub enum Msg {
     Quit,
     Choose_file,
     Blur,
+    Click(f64, f64)
 }
 
 pub struct Win {
@@ -70,12 +78,10 @@ impl Update for Win {
                         let strr = filechooser_button.get_filename().unwrap().into_os_string().into_string().unwrap();
                         let img_pixbuf = Pixbuf::new_from_file_at_size(&strr, 500, 500).unwrap();
                         preview_img.set_from_pixbuf(&img_pixbuf);
-                        // let () = strr;
                         println!("{}", strr);
             },
-            Msg::Blur => {
-                
-            }
+            Msg::Blur => {},
+            Msg::Click(x, y) => { println!("x:{}, y:{}",x ,y); }
         }
     }
 }
@@ -91,7 +97,6 @@ impl Widget for Win {
 
         // Create a box
         let vbox = gtk::Box::new(Vertical, 0);
-        // let vboxB = gtk::Box::new(Vertical, 0);
         // Add botton into box
         let exit_button = Button::new_with_label("Exit");
         let filechooser_button = FileChooserButton::new("Select", FileChooserAction::Open);
@@ -108,11 +113,14 @@ impl Widget for Win {
         window.add(&vbox);
         // window.fullscreen();
 
+        let gesture_drag = GestureMultiPress::new(&window);
+
         // Connect the signal `delete_event` to send the `Quit` message.
         connect!(relm, window, connect_delete_event(_, _), return (Some(Msg::Quit), Inhibit(false)));
         connect!(relm, exit_button, connect_clicked(_), Msg::Quit);
         connect!(relm, filechooser_button, connect_file_set(_), Msg::Choose_file);
         connect!(relm, blur_button, connect_clicked(_), Msg::Blur);
+        connect!(relm, gesture_drag, connect_pressed(_, _, x, y), Msg::Click(x, y));
         // TODO: find out the which stucture contains this fucking method
         window.show_all();
         
@@ -124,7 +132,8 @@ impl Widget for Win {
                 filechooser_button,
                 blur_button,
                 preview_img,
-                window: window,
+                window,
+                gesture_drag,
             }
         }
     }
