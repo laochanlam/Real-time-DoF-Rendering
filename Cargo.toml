@@ -14,6 +14,7 @@ num-traits = "0.1.32"
 relm = "^0.11.0"
 relm-derive = "^0.11.0"
 gdk-pixbuf = "*"
+gdk = "*"
 
 [dependencies.gtk]
 version = "*"
