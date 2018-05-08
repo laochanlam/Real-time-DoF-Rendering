@@ -4,7 +4,7 @@ use num::NumCast;
 use num_traits::clamp;
 use std::thread;
 use std::sync::{Arc, Mutex};
-static NTHREADS: i32 = 4;
+static NTHREADS: i32 = 1;
 extern crate image;
 
 pub fn count_coc <I: GenericImage> (img: &I) -> Vec<i32> 
@@ -52,11 +52,12 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 		let pixel_r = pixel_r.clone();
 		let pixel_g = pixel_g.clone();
 		let pixel_b = pixel_b.clone();
-		let width = width * NTHREADS / (id+1);
+		let x_start = width / NTHREADS * id;
+		let x_end = width / NTHREADS * (id+1);
 		let radius = radius.clone();
 		let child = thread::spawn(move || {
 			let img = image::open("data/input.bmp").unwrap();
-			for x in 0..width {
+			for x in x_start..x_end {
 				for y in 0..height {
 					let px = img.get_pixel(x as u32, y as u32);
 					let (k1, k2, k3, k4) = px.channels4();
@@ -68,7 +69,10 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 					);
 
 					// (0, 0, 0) is black
-					let _pos = (x * height + y) as usize;
+					let mut _pos = (x * height + y) as usize;
+					if _pos >= 192000 {
+						_pos = 0;
+					}
 					let r: i32 = radius[_pos];
 					let x_left:  i32 = x - (r-1)/2;
 					let x_right: i32 = x + (r-1)/2;
@@ -80,7 +84,7 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 
 					for i in x_left..x_right {
 						for j in y_left..y_right {
-							if i<0 || i>= width || j<0 || j>= height {
+							if i<0 || i>= width || j<0 || j>= height || i*height + j >= 1920000 {
 								continue;
 							}
 
@@ -90,7 +94,7 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 						}
 					}
 				}
-				println!("id {}: end of a row", id);
+				// println!("id {}: end of a row", id);
 			}
 			println!("hello");
 		});

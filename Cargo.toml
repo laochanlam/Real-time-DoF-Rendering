@@ -7,3 +7,4 @@ authors = ["laochanlam <laochanlam@gmail.com>"]
 image = '*'
 num = '*'
 num-traits = "0.1.32"
+time = '*'
