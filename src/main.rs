@@ -6,7 +6,7 @@ mod cayon;   // import test.rs
 
 fn main() {
     let img = image::open("data/input.bmp").unwrap();
-    let mut coc = cayon::count_coc(&img);
+    let mut coc: Vec<i32> = cayon::count_coc(&img);
     let img_render = cayon::whatever(&img, &mut coc);
     img_render.save("data/haha.bmp");
 

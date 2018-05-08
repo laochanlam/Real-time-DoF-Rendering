@@ -2,6 +2,10 @@
 use image:: {GenericImage, ImageBuffer, Pixel};
 use num::NumCast;
 use num_traits::clamp;
+use std::thread;
+use std::sync::{Arc, Mutex};
+static NTHREADS: i32 = 4;
+extern crate image;
 
 pub fn count_coc <I: GenericImage> (img: &I) -> Vec<i32> 
     where I::Pixel: 'static {
@@ -39,39 +43,67 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 	let mut pixel_r = vec![0.0; _size];
 	let mut pixel_g = vec![0.0; _size];
 	let mut pixel_b = vec![0.0; _size];
+	let pixel_r = Arc::new(Mutex::new(pixel_r));
+	let pixel_g = Arc::new(Mutex::new(pixel_g));
+	let pixel_b = Arc::new(Mutex::new(pixel_b));
 
-	for x in 0..width {
-		for y in 0..height {
-			let px = img.get_pixel(x as u32, y as u32);
-			let (k1, k2, k3, k4) = px.channels4();
-			let tup: (f64, f64, f64, f64) = (
-				NumCast::from(k1).unwrap(),
-				NumCast::from(k2).unwrap(),
-				NumCast::from(k3).unwrap(),
-				NumCast::from(k4).unwrap()
-			);
+	let mut children = vec![];
+	for id in 0..NTHREADS {
+		let pixel_r = pixel_r.clone();
+		let pixel_g = pixel_g.clone();
+		let pixel_b = pixel_b.clone();
+		let width = width * NTHREADS / (id+1);
+		let radius = radius.clone();
+		let child = thread::spawn(move || {
+			let img = image::open("data/input.bmp").unwrap();
+			for x in 0..width {
+				for y in 0..height {
+					let px = img.get_pixel(x as u32, y as u32);
+					let (k1, k2, k3, k4) = px.channels4();
+					let tup: (f64, f64, f64, f64) = (
+						NumCast::from(k1).unwrap(),
+						NumCast::from(k2).unwrap(),
+						NumCast::from(k3).unwrap(),
+						NumCast::from(k4).unwrap()
+					);
 
-			// (0, 0, 0) is black
-			let _pos = (x * height + y) as usize;
-			let r: i32 = radius[_pos];
-			let x_left:  i32 = x - (r-1)/2;
-			let x_right: i32 = x + (r-1)/2;
-			let y_left:  i32 = y - (r-1)/2;
-			let y_right: i32 = y + (r-1)/2;
+					// (0, 0, 0) is black
+					let _pos = (x * height + y) as usize;
+					let r: i32 = radius[_pos];
+					let x_left:  i32 = x - (r-1)/2;
+					let x_right: i32 = x + (r-1)/2;
+					let y_left:  i32 = y - (r-1)/2;
+					let y_right: i32 = y + (r-1)/2;
+					let mut pixel_r = pixel_r.lock().unwrap();
+					let mut pixel_g = pixel_g.lock().unwrap();
+					let mut pixel_b = pixel_b.lock().unwrap();
 
-			for i in x_left..x_right {
-				for j in y_left..y_right {
-					if i<0 || i>= width || j<0 || j>= height {
-						continue;
+					for i in x_left..x_right {
+						for j in y_left..y_right {
+							if i<0 || i>= width || j<0 || j>= height {
+								continue;
+							}
+
+							pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
+							pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
+							pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
+						}
 					}
-
-					pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
-					pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
-					pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
 				}
+				println!("id {}: end of a row", id);
 			}
-		}
+			println!("hello");
+		});
+
+		children.push(child);
 	}
+
+	for child in children {
+		let _ = child.join();
+	}
+	let mut pixel_r = pixel_r.lock().unwrap();
+	let mut pixel_g = pixel_g.lock().unwrap();
+	let mut pixel_b = pixel_b.lock().unwrap();
 
 	for x in 0..width {
 		for y in 0..height {
