@@ -2,9 +2,12 @@ extern crate gtk;
 extern crate gdk;
 extern crate gdk_pixbuf;
 
+extern crate image;
+
 use relm::{Relm, Update, Widget};
 use gtk::Orientation::{Vertical, Horizontal};
 
+use image::{GenericImage};
 // Widget
 use gtk::{
     Window,
@@ -30,11 +33,13 @@ use gtk::{
 use self::gdk:: {Screen, ScreenExt, WindowExt};
 
 
-use self::gdk_pixbuf::Pixbuf;
+use self::gdk_pixbuf::{Pixbuf, PixbufFormat};
 
 pub struct Model {
     screen_height: i32,
-    screen_width: i32
+    screen_width: i32,
+    unit_width: f64,
+    unit_height: f64,
 }
 
 pub struct Widgets {
@@ -70,6 +75,8 @@ impl Update for Win {
         Model {
             screen_height: Screen::get_default().unwrap().get_height(),
             screen_width: Screen::get_default().unwrap().get_width(),
+            unit_width: 1.25,
+            unit_height: 1.7142857142857142,
         }
     }
     
@@ -80,16 +87,22 @@ impl Update for Win {
         match event {
             Msg::Quit => gtk::main_quit(),
             Msg::ChooseFile => {
+                let pathname = filechooser_button.get_filename().unwrap().into_os_string().into_string().unwrap();
 
-                        let strr = filechooser_button.get_filename().unwrap().into_os_string().into_string().unwrap();
-                        // range 1280~ (800 - 100)
-                        let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&strr, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
-                        preview_img.set_from_pixbuf(&new_img_pixbuf);
-                        self.widgets.window.fullscreen();
-                        println!("{}", strr);
+                let img = image::open(&pathname).unwrap();
+                let (width_img, height_img) = img.dimensions();
+                self.model.unit_width = (width_img as f64) / (self.model.screen_width as f64);
+                self.model.unit_height = (height_img as f64) / ((self.model.screen_height - 100) as f64);
+                println!("uw:{}, uh:{}",self.model.unit_width ,self.model.unit_height);
+
+                // range 1280~ (800 - 100)
+                let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&pathname, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
+                preview_img.set_from_pixbuf(&new_img_pixbuf);
+                self.widgets.window.fullscreen();
+                println!("{}", pathname);
             },
             Msg::Blur => {},
-            Msg::Click(x, y) => { println!("x:{}, y:{}",x ,y); }
+            Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); }
         }
     }
 }
@@ -113,10 +126,18 @@ impl Widget for Win {
 
         let screen_height = Screen::get_default().unwrap().get_height();
         let screen_width = Screen::get_default().unwrap().get_width();
-        let img_pixbuf = Pixbuf::new_from_file_at_scale("data/test.jpg", screen_width, screen_height - 100, false).unwrap();
+        let img_pixbuf = Pixbuf::new_from_file_at_scale("data/input.bmp", screen_width, screen_height - 100, false).unwrap();
+    
         let preview_img = Image::new_from_pixbuf(&img_pixbuf);
         let gesture_drag = GestureMultiPress::new(&window);
-        // println!("{:?}", blur_button.get_preferred_size());
+
+        let img = image::open("data/input.bmp").unwrap();
+        let (width_img, height_img) = img.dimensions();
+        let unit_width = (width_img as f64) / (screen_width as f64);
+        let unit_height = (height_img as f64) / ((screen_height - 100) as f64);
+        println!("uw:{}, uh:{}",unit_width ,unit_height);
+
+        // println!("{:?}", img.dimensions());
 
         vbox.add(&preview_img);
         vbox.add(&filechooser_button);
