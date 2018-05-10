@@ -5,7 +5,7 @@ extern crate gdk_pixbuf;
 extern crate image;
 
 use relm::{Relm, Update, Widget};
-use gtk::Orientation::{Vertical, Horizontal};
+use gtk::Orientation::{Vertical};
 
 use image::{GenericImage};
 // Widget
@@ -26,14 +26,12 @@ use gtk::{
     ImageExt,
     GestureMultiPress,
     GestureMultiPressExt,
-    GestureDrag,
-    GestureDragExt,
 };
 
-use self::gdk:: {Screen, ScreenExt, WindowExt};
+use self::gdk:: {Screen, ScreenExt};
 
 
-use self::gdk_pixbuf::{Pixbuf, PixbufFormat};
+use self::gdk_pixbuf::{Pixbuf};
 
 pub struct Model {
     screen_height: i32,
@@ -42,6 +40,7 @@ pub struct Model {
     unit_height: f64,
 }
 
+#[derive(Clone)]
 pub struct Widgets {
     exit_button: Button,
     filechooser_button: FileChooserButton,
@@ -102,7 +101,10 @@ impl Update for Win {
                 println!("{}", pathname);
             },
             Msg::Blur => {},
-            Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); }
+            Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); 
+            
+            
+            }
         }
     }
 }
@@ -137,17 +139,11 @@ impl Widget for Win {
         let unit_height = (height_img as f64) / ((screen_height - 100) as f64);
         println!("uw:{}, uh:{}",unit_width ,unit_height);
 
-        // println!("{:?}", img.dimensions());
-
         vbox.add(&preview_img);
         vbox.add(&filechooser_button);
         vbox.add(&blur_button);
         vbox.add(&exit_button);
         window.add(&vbox);
-
-        // let screen = Screen::get_default();
-        // let scr = screen.unwrap().get_height();
-        // screen.get_height();
 
         window.fullscreen();
 
@@ -157,7 +153,6 @@ impl Widget for Win {
         connect!(relm, filechooser_button, connect_file_set(_), Msg::ChooseFile);
         connect!(relm, blur_button, connect_clicked(_), Msg::Blur);
         connect!(relm, gesture_drag, connect_pressed(_, _, x, y), Msg::Click(x, y));
-        // TODO: find out the which stucture contains this fucking method
         window.show_all();
         
         // return
