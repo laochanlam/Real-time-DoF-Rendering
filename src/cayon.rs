@@ -4,7 +4,7 @@ use num::NumCast;
 use num_traits::clamp;
 use std::thread;
 use std::sync::{Arc, Mutex};
-static NTHREADS: i32 = 1;
+static NTHREADS: i32 = 4;
 extern crate image;
 
 pub fn count_coc <I: GenericImage> (img: &I) -> Vec<i32> 
@@ -55,8 +55,12 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 		let x_start = width / NTHREADS * id;
 		let x_end = width / NTHREADS * (id+1);
 		let radius = radius.clone();
+
 		let child = thread::spawn(move || {
 			let img = image::open("data/input.bmp").unwrap();
+			let mut local_pixel_r = vec![0.0; _size];
+			let mut local_pixel_g = vec![0.0; _size];
+			let mut local_pixel_b = vec![0.0; _size];
 			for x in x_start..x_end {
 				for y in 0..height {
 					let px = img.get_pixel(x as u32, y as u32);
@@ -78,9 +82,6 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 					let x_right: i32 = x + (r-1)/2;
 					let y_left:  i32 = y - (r-1)/2;
 					let y_right: i32 = y + (r-1)/2;
-					let mut pixel_r = pixel_r.lock().unwrap();
-					let mut pixel_g = pixel_g.lock().unwrap();
-					let mut pixel_b = pixel_b.lock().unwrap();
 
 					for i in x_left..x_right {
 						for j in y_left..y_right {
@@ -88,15 +89,26 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 								continue;
 							}
 
-							pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
-							pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
-							pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
+							local_pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
+							local_pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
+							local_pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
 						}
 					}
 				}
 				// println!("id {}: end of a row", id);
 			}
-			println!("hello");
+
+			let mut pixel_r = pixel_r.lock().unwrap();
+			let mut pixel_g = pixel_g.lock().unwrap();
+			let mut pixel_b = pixel_b.lock().unwrap();
+			for i in 0..width {
+				for j in 0..height {
+					let _pos = (i*height+j) as usize;
+					pixel_r[_pos] += local_pixel_r[_pos];
+					pixel_g[_pos] += local_pixel_g[_pos];
+					pixel_b[_pos] += local_pixel_b[_pos];
+				}
+			}
 		});
 
 		children.push(child);
