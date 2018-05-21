@@ -4,6 +4,7 @@ version = "0.1.1"
 authors = ["laochanlam <laochanlam@gmail.com>, cayonliow <cayo.1318.96@hotmail.com>"]
 
 [dependencies]
+time = '*'
 image = '*'
 num = '*'
 num-traits = "0.1.32"

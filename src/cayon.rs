@@ -93,10 +93,10 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<u8>)
 	let mut pixel_g = vec![0.0; _size];
 	let mut pixel_b = vec![0.0; _size];
 
-	let mut pathdown: [String; 5] = ["data/downsize1.bmp".to_string(), "data/downsize2.bmp".to_string(), "data/downsize3.bmp".to_string(), "data/downsize4.bmp".to_string(), "data/downsize5.bmp".to_string()];
+	let mut pathdown: [String; 5] = ["data/dst_downsize1.bmp".to_string(), "data/dst_downsize2.bmp".to_string(), "data/dst_downsize3.bmp".to_string(), "data/dst_downsize4.bmp".to_string(), "data/dst_downsize5.bmp".to_string()];
 	//let mut img_d: Vec<image::DynamicImage> = vec![image::DynamicImage::ImageRgb8; 5];
 
-	let img_gray = image::open("data/gray.bmp").unwrap();
+	let img_gray = image::open("data/ds2.png").unwrap();
 	let (width_g, height_g) = img_gray.dimensions();
 	let (width_g, height_g) = (width_g as i32, height_g as i32);
 	let mut distance_gray: Vec<i32> = vec![0; NumCast::from(width_g * height_g).unwrap()];
@@ -109,7 +109,7 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<u8>)
 			//1-5
 		}
 	}
-	let mut img = image::open("data/input.bmp").unwrap();
+	let mut img = image::open("data/ds1.png").unwrap();
 	let mut img_d1= image::open(pathdown[0].to_string()).unwrap();
 	let mut img_d2= image::open(pathdown[1].to_string()).unwrap();
 	let mut img_d3= image::open(pathdown[2].to_string()).unwrap();	
@@ -142,9 +142,7 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<u8>)
 			}
 
 			let two: u32 =2; 
-			let Q = (two.pow((d_lvl-1) as u32) as u32) as i32;
-			//println!("hi{:} {:}",q1,q2);
-			//println!("hi{:} {:}",x, y);			
+			let Q = (two.pow((d_lvl-1) as u32) as u32) as i32;			
 			println!("{}", d_lvl);
 			let px = selected_img.get_pixel((x/Q) as u32, (y/ Q)as u32);
 			let (k1, k2, k3, k4) = px.channels4();
@@ -162,7 +160,6 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<u8>)
 			let x_right: i32 = x + (r-1)/2;
 			let y_left: i32 = y - (r-1)/2;
 			let y_right: i32 = y + (r-1)/2;
-			//println!("3");
 
 			for i in x_left..x_right {
 				for j in y_left..y_right {
