@@ -4,7 +4,7 @@ use num::NumCast;
 use num_traits::clamp;
 use std::thread;
 use std::sync::{Arc, Mutex};
-static NTHREADS: i32 = 4;
+static NTHREADS: i32 = 8;
 
 pub fn count_coc <I: GenericImage> (img: &I) -> Vec<i32> 
     where I::Pixel: 'static {
@@ -48,6 +48,7 @@ pub fn copy_from_gi<O: GenericImage>(other: O)
 	// return
 	buf
 }
+
 pub fn copy_from_di<O: GenericImage>(other: O)
 	-> ImageBuffer<O::Pixel, Vec<<O::Pixel as Pixel>::Subpixel>>   
     where O::Pixel: 'static {
@@ -65,7 +66,6 @@ pub fn copy_from_di<O: GenericImage>(other: O)
 	// return 
     buf
 }
-
 
 pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
@@ -97,39 +97,29 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 			let mut local_pixel_g = vec![0.0; _size];
 			let mut local_pixel_b = vec![0.0; _size];
 
-			let mut pathdown: [String; 5] = ["data/dst_downsize1.bmp".to_string(), "data/dst_downsize2.bmp".to_string(), "data/dst_downsize3.bmp".to_string(), "data/dst_downsize4.bmp".to_string(), "data/dst_downsize5.bmp".to_string()];
-			let mut img = image::open("data/ds1.png").unwrap();
-			let mut img_d1= image::open(pathdown[0].to_string()).unwrap();
-			let mut img_d2= image::open(pathdown[1].to_string()).unwrap();
-			let mut img_d3= image::open(pathdown[2].to_string()).unwrap();	
-			let mut img_d4= image::open(pathdown[3].to_string()).unwrap();
-			let mut img_d5= image::open(pathdown[4].to_string()).unwrap();
+			let mut img   = image::open("data/ds1.png").unwrap();
+			let mut img_g = image::open("data/ds2.png").unwrap();
+			let mut img_d1= image::open("data/dst_downsize1.bmp".to_string()).unwrap();
+			let mut img_d2= image::open("data/dst_downsize2.bmp".to_string()).unwrap();
+			let mut img_d3= image::open("data/dst_downsize3.bmp".to_string()).unwrap();	
+			let mut img_d4= image::open("data/dst_downsize4.bmp".to_string()).unwrap();
+			let mut img_d5= image::open("data/dst_downsize5.bmp".to_string()).unwrap();
 
-			let img_gray = image::open("data/ds2.png").unwrap();
-			let (width_g, height_g) = img_gray.dimensions();
+			let (width_g, height_g) = img_g.dimensions();
 			let (width_g, height_g) = (width_g as i32, height_g as i32);
-			let mut distance_gray: Vec<i32> = vec![0; NumCast::from(width_g * height_g).unwrap()];
+			let mut distance_gray: Vec<i32> = vec![0; (width_g * height_g) as usize];
 			for x in 0..width_g {
 				for y in 0..height_g {
-					let px = img_gray.get_pixel(x as u32, y as u32);
+					let px = img_g.get_pixel(x as u32, y as u32);
 					let (k1, _, _, _) = px.channels4();
 					let k1_unwrap: i32 = NumCast::from(k1).unwrap();
+					// TODO: make sure how to calculate mipmap level
 					distance_gray[(x*height_g+y) as usize] = k1_unwrap/60 + 1 as i32;
-					//1-5
 				}
 			}
 
 			for x in x_start..x_end {
 				for y in 0..height {
-					let px = img.get_pixel(x as u32, y as u32);
-					let (k1, k2, k3, k4) = px.channels4();
-					let tup: (f64, f64, f64, f64) = (
-						NumCast::from(k1).unwrap(),
-						NumCast::from(k2).unwrap(),
-						NumCast::from(k3).unwrap(),
-						NumCast::from(k4).unwrap()
-					);
-
 					let d_lvl = distance_gray[(x*height_g+y) as usize];
 					let mut selected_img;
 
@@ -169,23 +159,9 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 							if i<0 || i>= width || j<0 || j>= height {
 								continue;
 							}
-							let r: i32 = radius[_pos];
-							let x_left:  i32 = x - (r-1)/2;
-							let x_right: i32 = x + (r-1)/2;
-							let y_left:  i32 = y - (r-1)/2;
-							let y_right: i32 = y + (r-1)/2;
-
-							for i in x_left..x_right {
-								for j in y_left..y_right {
-									if i<0 || i>= width || j<0 || j>= height || i*height + j >= 1920000 {
-										continue;
-									}
-
-									local_pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
-									local_pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
-									local_pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
-								}
-							}
+							local_pixel_r[(i*height + j) as usize] += tup.0 / ((r*r) as f64);
+							local_pixel_g[(i*height + j) as usize] += tup.1 / ((r*r) as f64);
+							local_pixel_b[(i*height + j) as usize] += tup.2 / ((r*r) as f64);
 						}
 						// println!("id {}: end of a row", id);
 					}
@@ -242,7 +218,8 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 
 pub fn downsize <I: GenericImage> (img: I, lvl: u32) 
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>   
-    where I::Pixel: 'static {                                      
+    where I::Pixel: 'static {
+
 	let two: u32 =2;
     let (width, height) = img.dimensions();
 
