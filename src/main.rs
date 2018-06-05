@@ -19,7 +19,7 @@ fn main() {
     let mut pathdown: [String; 5] = ["data/dst_downsize1.bmp".to_string(), "data/dst_downsize2.bmp".to_string(), "data/dst_downsize3.bmp".to_string(), "data/dst_downsize4.bmp".to_string(), "data/dst_downsize5.bmp".to_string()];
 
     let mut b = cayon::count_coc(&img_gray);
-    let c = cayon::whatever(&img, &mut b);
+    let c = cayon::render(&img, &mut b);
     c.save("data/dst_haha.bmp");
 
     let mut end_time = time::get_time().sec;

@@ -49,25 +49,7 @@ pub fn copy_from_gi<O: GenericImage>(other: O)
 	buf
 }
 
-pub fn copy_from_di<O: GenericImage>(other: O)
-	-> ImageBuffer<O::Pixel, Vec<<O::Pixel as Pixel>::Subpixel>>   
-    where O::Pixel: 'static {
-
-	let mut buf = ImageBuffer::new(other.width(), other.height());
-	for i in 0 .. other.width() {
-		for k in 0 .. other.height() {
-			unsafe {
-				let p = other.get_pixel(i, k);
-				buf.put_pixel(i, k, p);
-			}
-		}
-	}
-
-	// return 
-    buf
-}
-
-pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
+pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
     where I::Pixel: 'static {
 
@@ -216,86 +198,43 @@ pub fn whatever <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
 	img_out
 }
 
-pub fn downsize <I: GenericImage> (img: I, lvl: u32) 
+pub fn downsize <I: GenericImage> (img: I, level: u32) 
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>   
     where I::Pixel: 'static {
 
-	let two: u32 =2;
+	let two: u32 = 2;
     let (width, height) = img.dimensions();
 
     let mut down_img = ImageBuffer::new(width/two, height/two);
 	let mut temp_img = ImageBuffer::new(width, height);
 	temp_img = copy_from_gi(img);
 
-	for n in 0..lvl {
-		println!("n={:}",n);
+	for n in 0..level {
 		for x in 0..width/two.pow(n+1) {
 			for y in 0..height/two.pow(n+1) {
-				let px00 = temp_img.get_pixel(2*x, 2*y);
-				let px01 = temp_img.get_pixel(2*x, 2*y+1);
-				let px10 = temp_img.get_pixel(2*x+1, 2*y);
-				let px11 = temp_img.get_pixel(2*x+1, 2*y+1);
+				
+				let px1 = temp_img.get_pixel(x*2, y*2);
+				let px2 = temp_img.get_pixel(x*2, y*2+1);
+				let px3 = temp_img.get_pixel(x*2+1, y*2);
+				let px4 = temp_img.get_pixel(x*2+1, y*2+1);
 
-				let mut tup; //= (k1, k2, k3, k4);
-				tup = px00.channels4();
-				let mut vec: (f64, f64, f64, f64) = (
-				NumCast::from(tup.0).unwrap(),
-				NumCast::from(tup.1).unwrap(),
-				NumCast::from(tup.2).unwrap(),
-				NumCast::from(tup.3).unwrap()
-				);
+				let px1 = px1.channels4();
+				let px2 = px2.channels4();
+				let px3 = px3.channels4();
+				let px4 = px4.channels4();
 
-				let mut r1 = vec.0;
-				let mut g1 = vec.1;
-				let mut b1 = vec.2;
+				let r = px1.0 + px2.0 + px3.0 + px4.0;
+				let g = px1.1 + px2.1 + px3.1 + px4.1;
+				let b = px1.2 + px2.2 + px3.2 + px4.2;
 
-				tup = px01.channels4();
-				vec = (
-				NumCast::from(tup.0).unwrap(),
-				NumCast::from(tup.1).unwrap(),
-				NumCast::from(tup.2).unwrap(),
-				NumCast::from(tup.3).unwrap()
-				);
-
-				let mut r2 = vec.0;
-				let mut g2 = vec.1;
-				let mut b2 = vec.2;
-
-				tup = px10.channels4();
-				vec = (
-				NumCast::from(tup.0).unwrap(),
-				NumCast::from(tup.1).unwrap(),
-				NumCast::from(tup.2).unwrap(),
-				NumCast::from(tup.3).unwrap()
-				);
-
-				let mut r3 = vec.0;
-				let mut g3 = vec.1;
-				let mut b3 = vec.2;
-
-				tup = px11.channels4();
-				vec = (
-				NumCast::from(tup.0).unwrap(),
-				NumCast::from(tup.1).unwrap(),
-				NumCast::from(tup.2).unwrap(),
-				NumCast::from(tup.3).unwrap()
-				);
-
-				let mut r4 = vec.0;
-				let mut g4 = vec.1;
-				let mut b4 = vec.2;
-
-
-				// let (r1, g1, b1) = get_rgb (px00);
-				// let (r2, g2, b2) = get_rgb (px01);
-				// let (r3, g3, b3) = get_rgb (px10);
-				// let (r4, g4, b4) = get_rgb (px11);
-
+				let r: f64 = NumCast::from(r).unwrap();
+				let g: f64 = NumCast::from(g).unwrap();
+				let b: f64 = NumCast::from(b).unwrap();
 
             	let new_pixel = Pixel::from_channels(
-                	NumCast::from(clamp((r1+r2+r3+r4)/4.0, 0.0, 255.0)).unwrap(),
-					NumCast::from(clamp((g1+g2+g3+g4)/4.0, 0.0, 255.0)).unwrap(),
-					NumCast::from(clamp((b1+b2+b3+b4)/4.0, 0.0, 255.0)).unwrap(),
+                	NumCast::from(clamp(r/4.0, 0.0, 255.0)).unwrap(),
+					NumCast::from(clamp(g/4.0, 0.0, 255.0)).unwrap(),
+					NumCast::from(clamp(b/4.0, 0.0, 255.0)).unwrap(),
 					NumCast::from(clamp(0.0, 0.0, 255.0)).unwrap(),
 				);
 
@@ -306,18 +245,18 @@ pub fn downsize <I: GenericImage> (img: I, lvl: u32)
 		temp_img = down_img.clone();
 	}
 
-	let mut resize_img = ImageBuffer::new(width/two.pow(lvl), height/two.pow(lvl));
-	for x in 0..width/two.pow(lvl) {
-			for y in 0..height/two.pow(lvl) {
+	let mut resize_img = ImageBuffer::new(width/two.pow(level), height/two.pow(level));
+	for x in 0..width/two.pow(level) {
+			for y in 0..height/two.pow(level) {
 				let px = temp_img.get_pixel(x, y);
 				
 				let mut tup; //= (k1, k2, k3, k4);
 				tup = px.channels4();
 				let mut vec: (f64, f64, f64, f64) = (
-				NumCast::from(tup.0).unwrap(),
-				NumCast::from(tup.1).unwrap(),
-				NumCast::from(tup.2).unwrap(),
-				NumCast::from(tup.3).unwrap()
+					NumCast::from(tup.0).unwrap(),
+					NumCast::from(tup.1).unwrap(),
+					NumCast::from(tup.2).unwrap(),
+					NumCast::from(tup.3).unwrap()
 				);
 				let mut r5 = vec.0;
 				let mut g5 = vec.1;
