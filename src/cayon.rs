@@ -148,20 +148,19 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
                         // println!("id {}: end of a row", id);
                     }
                 }
-                let mut pixel_r = pixel_r.lock().unwrap();
-                let mut pixel_g = pixel_g.lock().unwrap();
-                let mut pixel_b = pixel_b.lock().unwrap();
-                for i in 0..width {
-                    for j in 0..height {
-                        let _pos = (i*height+j) as usize;
-                        pixel_r[_pos] += local_pixel_r[_pos];
-                        pixel_g[_pos] += local_pixel_g[_pos];
-                        pixel_b[_pos] += local_pixel_b[_pos];
-                    }
-                }
                 println!("hello: {}", x);
-            }	// end of a thread
-
+            }	// end of each pixel
+            let mut pixel_r = pixel_r.lock().unwrap();
+            let mut pixel_g = pixel_g.lock().unwrap();
+            let mut pixel_b = pixel_b.lock().unwrap();
+            for i in 0..width {
+                for j in 0..height {
+                    let _pos = (i*height+j) as usize;
+                    pixel_r[_pos] += local_pixel_r[_pos];
+                    pixel_g[_pos] += local_pixel_g[_pos];
+                    pixel_b[_pos] += local_pixel_b[_pos];
+                }
+            }
         });	// end of child = spawn a thread
 
         children.push(child);
@@ -181,13 +180,12 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
             let r = pixel_r[_pos];
             let g = pixel_g[_pos];
             let b = pixel_b[_pos];
-            let a = 0.0;
 
             let new_pixel = Pixel::from_channels(
                 NumCast::from(clamp(r, 0.0, 255.0)).unwrap(),
                 NumCast::from(clamp(g, 0.0, 255.0)).unwrap(),
                 NumCast::from(clamp(b, 0.0, 255.0)).unwrap(),
-                NumCast::from(clamp(a, 0.0, 255.0)).unwrap()
+                NumCast::from(clamp(0.0, 0.0, 255.0)).unwrap()
             );
 
             img_out.put_pixel(x as u32, y as u32, new_pixel);
@@ -247,32 +245,24 @@ pub fn downsize <I: GenericImage> (img: I, level: u32)
 
     let mut resize_img = ImageBuffer::new(width/two.pow(level), height/two.pow(level));
     for x in 0..width/two.pow(level) {
-            for y in 0..height/two.pow(level) {
-                let px = temp_img.get_pixel(x, y);
-                
-                let mut tup; //= (k1, k2, k3, k4);
-                tup = px.channels4();
-                let mut vec: (f64, f64, f64, f64) = (
-                    NumCast::from(tup.0).unwrap(),
-                    NumCast::from(tup.1).unwrap(),
-                    NumCast::from(tup.2).unwrap(),
-                    NumCast::from(tup.3).unwrap()
-                );
-                let mut r5 = vec.0;
-                let mut g5 = vec.1;
-                let mut b5 = vec.2;
-                
-                let new_pixel5 = Pixel::from_channels(
-                    NumCast::from(clamp(r5, 0.0, 255.0)).unwrap(),
-                    NumCast::from(clamp(g5, 0.0, 255.0)).unwrap(),
-                    NumCast::from(clamp(b5, 0.0, 255.0)).unwrap(),
-                    NumCast::from(clamp(0.0, 0.0, 255.0)).unwrap(),
-                );
-
-                resize_img.put_pixel(x, y, new_pixel5);
-
-            }
+        for y in 0..height/two.pow(level) {
+            let px = temp_img.get_pixel(x, y);
+            let px = px.channels4();
+            let px : (f64, f64, f64) = (
+                NumCast::from(px.0).unwrap(),
+                NumCast::from(px.1).unwrap(),
+                NumCast::from(px.2).unwrap()
+            );
+            let px = Pixel::from_channels(
+                NumCast::from(clamp(px.0, 0.0, 255.0)).unwrap(),
+                NumCast::from(clamp(px.1, 0.0, 255.0)).unwrap(),
+                NumCast::from(clamp(px.2, 0.0, 255.0)).unwrap(),
+                NumCast::from(clamp(0.0, 0.0, 255.0)).unwrap(),
+            );
+            resize_img.put_pixel(x, y, px);
+        }
     }
-    //return
+
+    // return
     resize_img
 }
