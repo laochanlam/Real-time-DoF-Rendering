@@ -6,22 +6,32 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 static NTHREADS: i32 = 8;
 
-pub fn count_coc <I: GenericImage> (img: &I) -> Vec<i32> 
+pub fn count_coc <I: GenericImage> (img: &I, ox: u32, oy: u32) -> Vec<i32> 
     where I::Pixel: 'static {
     
     let (width, height) = img.dimensions();
     let _size = NumCast::from(width * height).unwrap();
     let mut coc: Vec<i32> = vec![0; _size];
+    let opx = img.get_pixel(ox, oy);
+    let (k0, _, _, _) = opx.channels4();
+    let k0: i32 = NumCast::from(k0).unwrap();
 
     for x in 0..width {
         for y in 0..height {
             let px = img.get_pixel(x, y);
             let (k1, _, _, _) = px.channels4();
-            let k1_unwrap: f64 = NumCast::from(k1).unwrap();
-            let mut radius = (k1_unwrap + 1.0).sqrt() as i32;
-            if radius % 2 == 0 {
-                radius += 1;
+            let k1: i32 = NumCast::from(k1).unwrap();
+            let mut k = k1 - k0;
+            let mut radius = 1;
+            if(k < 0) {
+                radius = radius * -1;
+                k = k * -1;
             }
+            k = ((k+1) as f64).sqrt() as i32;
+            if(k % 2 == 0) {
+                k += 1;
+            }
+            radius = radius * k;
             coc[(x*height + y) as usize] = radius;
             // assert_eq!(a[a.len()-1], 0);
         }
@@ -148,7 +158,7 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
                         // println!("id {}: end of a row", id);
                     }
                 }
-                println!("hello: {}", x);
+                // println!("hello: {}", x);
             }	// end of each pixel
             let mut pixel_r = pixel_r.lock().unwrap();
             let mut pixel_g = pixel_g.lock().unwrap();

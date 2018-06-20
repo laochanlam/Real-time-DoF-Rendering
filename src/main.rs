@@ -18,7 +18,7 @@ fn main() {
     let mut pathblur: [String; 5] = ["data/dst1.bmp".to_string(), "data/dst2.bmp".to_string(), "data/dst3.bmp".to_string(), "data/dst4.bmp".to_string(), "data/dst5.bmp".to_string()];
     let mut pathdown: [String; 5] = ["data/dst_downsize1.bmp".to_string(), "data/dst_downsize2.bmp".to_string(), "data/dst_downsize3.bmp".to_string(), "data/dst_downsize4.bmp".to_string(), "data/dst_downsize5.bmp".to_string()];
 
-    let mut b = cayon::count_coc(&img_gray);
+    let mut b = cayon::count_coc(&img_gray, 0, 0);
     let c = cayon::render(&img, &mut b);
     c.save("data/dst_haha.bmp");
 
