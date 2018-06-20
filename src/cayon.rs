@@ -21,8 +21,8 @@ pub fn get_dof <I: GenericImage> (img: &I) -> Vec<i32>
             let (k1, _, _, _) = px.channels4();
             let k1: i32 = NumCast::from(k1).unwrap();
 
-            if(k1 > max) { max = k1; }
-            if(k1 < min) { min = k1; }
+            if k1 > max { max = k1; }
+            if k1 < min { min = k1; }
 
             dof[(x*height + y) as usize] = k1;
         }
@@ -51,13 +51,13 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
             let mut radius = 1;
             let mut dis = dof[pos] - odof;
 
-            if(dis < 0) {
+            if dis < 0 {
                 radius = -1;
                 dis = dis * -1;
             }
 
             dis = ((dis+1) as f64).sqrt() as i32;
-            if(dis % 2 == 0) {
+            if dis % 2 == 0 {
                 dis = dis + 1;
             }
 
@@ -71,17 +71,15 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
     coc
 }
 
-pub fn copy_from_gi<O: GenericImage>(other: O)
-    -> ImageBuffer<O::Pixel, Vec<<O::Pixel as Pixel>::Subpixel>>   
-    where O::Pixel: 'static {
+pub fn copy_from_gi<I: GenericImage>(img: &I)
+    -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>   
+    where I::Pixel: 'static {
 
-    let mut buf = ImageBuffer::new(other.width(), other.height());
-    for i in 0 .. other.width() {
-        for k in 0 .. other.height() {
-            unsafe {
-                let p = other.get_pixel(i, k);
-                buf.put_pixel(i, k, p);
-            }
+    let mut buf = ImageBuffer::new(img.width(), img.height());
+    for x in 0 .. img.width() {
+        for y in 0 .. img.height() {
+            let p = img.get_pixel(x, y);
+            buf.put_pixel(x, y, p);
         }
     }
     
@@ -89,6 +87,7 @@ pub fn copy_from_gi<O: GenericImage>(other: O)
     buf
 }
 
+#[allow(unused_mut)]    // for pixel_r
 pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
     where I::Pixel: 'static {
@@ -97,9 +96,9 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
     let (width, height) = (width as i32, height as i32);
     let _size = (width * height) as usize;
     let mut img_out = ImageBuffer::new(width as u32, height as u32);
-    let mut pixel_r = vec![0.0; _size];
-    let mut pixel_g = vec![0.0; _size];
-    let mut pixel_b = vec![0.0; _size];
+    let pixel_r = vec![0.0; _size];
+    let pixel_g = vec![0.0; _size];
+    let pixel_b = vec![0.0; _size];
     let pixel_r = Arc::new(Mutex::new(pixel_r));
     let pixel_g = Arc::new(Mutex::new(pixel_g));
     let pixel_b = Arc::new(Mutex::new(pixel_b));
@@ -119,13 +118,13 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
             let mut local_pixel_g = vec![0.0; _size];
             let mut local_pixel_b = vec![0.0; _size];
 
-            let mut img   = image::open("data/ds1.png").unwrap();
-            let mut img_g = image::open("data/ds2.png").unwrap();
-            let mut img_d1= image::open("data/dst_downsize1.bmp".to_string()).unwrap();
-            let mut img_d2= image::open("data/dst_downsize2.bmp".to_string()).unwrap();
-            let mut img_d3= image::open("data/dst_downsize3.bmp".to_string()).unwrap();	
-            let mut img_d4= image::open("data/dst_downsize4.bmp".to_string()).unwrap();
-            let mut img_d5= image::open("data/dst_downsize5.bmp".to_string()).unwrap();
+            let img   = image::open("data/ds1.png").unwrap();
+            let img_g = image::open("data/ds2.png").unwrap();
+            let img_d1= image::open("data/dst_downsize1.bmp".to_string()).unwrap();
+            let img_d2= image::open("data/dst_downsize2.bmp".to_string()).unwrap();
+            let img_d3= image::open("data/dst_downsize3.bmp".to_string()).unwrap();	
+            let img_d4= image::open("data/dst_downsize4.bmp".to_string()).unwrap();
+            // let img_d5= image::open("data/dst_downsize5.bmp".to_string()).unwrap();
 
             let (width_g, height_g) = img_g.dimensions();
             let (width_g, height_g) = (width_g as i32, height_g as i32);
@@ -158,8 +157,8 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
                     }
 
                     let two: u32 =2; 
-                    let Q = (two.pow((d_lvl-1) as u32) as u32) as i32;			
-                    let px = selected_img.get_pixel((x/Q) as u32, (y/ Q)as u32);
+                    let exp = (two.pow((d_lvl-1) as u32) as u32) as i32;			
+                    let px = selected_img.get_pixel((x / exp) as u32, (y / exp)as u32);
                     let (k1, k2, k3, k4) = px.channels4();
                     let tup: (f64, f64, f64, f64) = (
                         NumCast::from(k1).unwrap(),
@@ -236,7 +235,8 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
     img_out
 }
 
-pub fn downsize <I: GenericImage> (img: I, level: u32) 
+#[allow(unused_assignments)]    // for temp_img
+pub fn downsize <I: GenericImage> (img: &I, level: u32) 
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>   
     where I::Pixel: 'static {
 
