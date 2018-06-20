@@ -38,13 +38,11 @@ pub fn get_dof <I: GenericImage> (img: &I) -> Vec<i32>
     dof
 }
 
-pub fn get_coc <I: GenericImage> (img: &I, dof: &mut Vec<i32>, ox: u32, oy: u32) -> Vec<i32> 
-    where I::Pixel: 'static {
+pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -> Vec<i32> {
     
-    let (width, height) = img.dimensions();
     let _size = NumCast::from(width * height).unwrap();
     let mut coc: Vec<i32> = vec![0; _size];
-    let opos = ox*height + oy;
+    let opos = ox * height + oy;
     let odof = dof[opos as usize];
 
     for x in 0..width {
@@ -58,7 +56,12 @@ pub fn get_coc <I: GenericImage> (img: &I, dof: &mut Vec<i32>, ox: u32, oy: u32)
                 dis = dis * -1;
             }
 
-            radius = radius * (((dis+1) as f64).sqrt()) as i32;
+            dis = ((dis+1) as f64).sqrt() as i32;
+            if(dis % 2 == 0) {
+                dis = dis + 1;
+            }
+
+            radius = radius * dis;
             coc[pos] = radius;
             // assert_eq!(a[a.len()-1], 0);
         }

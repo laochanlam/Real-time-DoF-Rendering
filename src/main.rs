@@ -11,6 +11,8 @@ mod cayon;   // import test.rs
 fn main() {
     let img = image::open("data/ds1.png").unwrap();
     let img_gray = image::open("data/ds2.png").unwrap();
+    let (width, height) = img.dimensions();
+    let (width, height) = (width as i32, height as i32);
 
     let mut start_time = time::get_time().sec;
 
@@ -19,7 +21,7 @@ fn main() {
     // let mut pathdown: [String; 5] = ["data/dst_downsize1.bmp".to_string(), "data/dst_downsize2.bmp".to_string(), "data/dst_downsize3.bmp".to_string(), "data/dst_downsize4.bmp".to_string(), "data/dst_downsize5.bmp".to_string()];
 
     let mut dof = cayon::get_dof(&img_gray);
-    let mut coc = cayon::get_coc(&img_gray, &mut dof, 0, 0);
+    let mut coc = cayon::get_coc(&mut dof, 0, 0, width, height);
     let new_img = cayon::render(&img, &mut coc);
     new_img.save("data/dst_haha.bmp");
 
