@@ -46,7 +46,8 @@ pub struct Model {
     img: image::DynamicImage,
     img_gray: image::DynamicImage,
     dof: Vec<i32>,
-    coc: Vec<i32>
+    coc: Vec<i32>,
+    pathname: String,
 }
 
 #[derive(Clone)]
@@ -91,6 +92,7 @@ impl Update for Win {
             img_gray: image::DynamicImage::new_luma8(0, 0),
             dof: Vec::new(),
             coc: Vec::new(),
+            pathname: String::new(),
         }
     }
     
@@ -105,6 +107,7 @@ impl Update for Win {
                 let img_pathname = pathname.clone() + "/ds1.png";
                 let gray_pathname = pathname.clone() + "/ds2.png";
                 println!("{}", img_pathname);
+                self.model.pathname = pathname;
                 self.model.img = image::open(&img_pathname).unwrap();
                 self.model.img_gray = image::open(&gray_pathname).unwrap();
                 let (width_img, height_img) = self.model.img.dimensions();
@@ -122,17 +125,12 @@ impl Update for Win {
             },
             Msg::Blur => {},
             Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); 
-                // let img_gray = image::open("data/ds2.png").unwrap();
-                print!("hererrr");
+                println!("Click: self.model.pathname: {:?}", self.model.pathname);
                 self.model.dof = cayon::get_dof(&self.model.img_gray);
-                print!("her2e");
                 self.model.coc = cayon::get_coc(&mut self.model.dof, (x * self.model.unit_width) as i32, (y * self.model.unit_height) as i32, self.model.width_img as i32, self.model.height_img as i32);
-                print!("herccce");
                 // preview_img.
-                let new_img = cayon::render(&self.model.img, &mut self.model.coc);
-                print!("here");
+                let new_img = cayon::render(&self.model.img, &mut self.model.coc, &self.model.pathname);
                 let rendered_path = "data/lam.bmp";
-                print!("here2");
                 let _result = new_img.save(&rendered_path);
                 let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&rendered_path, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
                 preview_img.set_from_pixbuf(&new_img_pixbuf);
@@ -177,7 +175,7 @@ impl Widget for Win {
         let img_gray = image::open("data/computer/ds2.png").unwrap();
         let mut dof = cayon::get_dof(&img_gray);
         let mut coc = cayon::get_coc(&mut dof, 0, 0, width_img as i32, height_img as i32);
-
+        let pathname = "data/computer".to_string();
         vbox.add(&preview_img);
         vbox.add(&filechooser_button);
         vbox.add(&blur_button);
@@ -207,6 +205,7 @@ impl Widget for Win {
                 img_gray,
                 dof,
                 coc,
+                pathname,
             }, 
             widgets: Widgets {
                 exit_button,

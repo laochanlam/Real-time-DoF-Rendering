@@ -95,7 +95,7 @@ pub fn copy_from_gi<I: GenericImage>(img: &I)
 }
 
 #[allow(unused_mut)]    // for pixel_r
-pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
+pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>, pathname: &String)
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
     where I::Pixel: 'static {
 
@@ -119,18 +119,18 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
         let x_start = width / NTHREADS * id;
         let x_end   = width / NTHREADS * (id+1);
         let radius = radius.clone();
+        let pathname = pathname.clone();
 
         let child = thread::spawn(move || {
             let mut local_pixel_r = vec![0.0; _size];
             let mut local_pixel_g = vec![0.0; _size];
             let mut local_pixel_b = vec![0.0; _size];
-
-            let img   = image::open("data/ds1.png").unwrap();
-            let img_g = image::open("data/ds2.png").unwrap();
-            let img_d1= image::open("data/dst_downsize1.bmp".to_string()).unwrap();
-            let img_d2= image::open("data/dst_downsize2.bmp".to_string()).unwrap();
-            let img_d3= image::open("data/dst_downsize3.bmp".to_string()).unwrap();	
-            let img_d4= image::open("data/dst_downsize4.bmp".to_string()).unwrap();
+            let img   = image::open(pathname.clone() + "/ds1.png").unwrap();
+            let img_g = image::open(pathname.clone() + "/ds2.png").unwrap();
+            let img_d1= image::open(pathname.clone() + "/dst_downsize1.bmp").unwrap();
+            let img_d2= image::open(pathname.clone() + "/dst_downsize2.bmp").unwrap();
+            let img_d3= image::open(pathname.clone() + "/dst_downsize3.bmp").unwrap();	
+            let img_d4= image::open(pathname.clone() + "/dst_downsize4.bmp").unwrap();
             // let img_d5= image::open("data/dst_downsize5.bmp".to_string()).unwrap();
 
             let (width_g, height_g) = img_g.dimensions();
