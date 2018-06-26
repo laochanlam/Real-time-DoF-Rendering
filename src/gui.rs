@@ -1,14 +1,12 @@
 extern crate gtk;
 extern crate gdk;
 extern crate gdk_pixbuf;
-
 extern crate image;
 
 use relm::{Relm, Update, Widget};
 use gtk::Orientation::{Vertical};
 
-use image::{GenericImage};
-
+use image::{GenericImage}; 
 use cayon;
 
 // Widget
@@ -32,8 +30,6 @@ use gtk::{
 };
 
 use self::gdk:: {Screen, ScreenExt};
-
-
 use self::gdk_pixbuf::{Pixbuf};
 
 pub struct Model {
@@ -72,8 +68,6 @@ pub struct Win {
     model: Model,
     widgets: Widgets,
 }
-
-
 
 impl Update for Win {
     type Model = Model;
@@ -116,19 +110,16 @@ impl Update for Win {
                 self.model.unit_width = (width_img as f64) / (self.model.screen_width as f64);
                 self.model.unit_height = (height_img as f64) / ((self.model.screen_height - 100) as f64);
                 println!("uw:{}, uh:{}",self.model.unit_width ,self.model.unit_height);
-
                 // range 1280~ (800 - 100)
                 let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&img_pathname, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
                 preview_img.set_from_pixbuf(&new_img_pixbuf);
                 self.widgets.window.fullscreen();
-                // println!("{}", pathname);
             },
             Msg::Blur => {},
             Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); 
                 println!("Click: self.model.pathname: {:?}", self.model.pathname);
                 self.model.dof = cayon::get_dof(&self.model.img_gray);
                 self.model.coc = cayon::get_coc(&mut self.model.dof, (x * self.model.unit_width) as i32, (y * self.model.unit_height) as i32, self.model.width_img as i32, self.model.height_img as i32);
-                // preview_img.
                 let new_img = cayon::render(&self.model.img, &mut self.model.coc, &self.model.pathname);
                 println!("end of render");
                 let rendered_path = "data/lam.bmp";
@@ -136,7 +127,6 @@ impl Update for Win {
                 let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&rendered_path, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
                 preview_img.set_from_pixbuf(&new_img_pixbuf);
                 self.widgets.window.fullscreen();
-                // println!("coc:{:?}",self.model.coc);
             }
         }
     }
@@ -154,35 +144,34 @@ impl Widget for Win {
         // regard as constructor 
         // Create a box
         let vbox = gtk::Box::new(Vertical, 0);
-        // Add botton into box
+        // add button
         let exit_button = Button::new_with_label("Exit");
         let filechooser_button = FileChooserButton::new("Select", FileChooserAction::SelectFolder);
         let blur_button = Button::new_with_label("Blur");
         let window = Window::new(WindowType::Toplevel);
-
+        // get screen infor
         let screen_height = Screen::get_default().unwrap().get_height();
         let screen_width = Screen::get_default().unwrap().get_width();
         let img_pixbuf = Pixbuf::new_from_file_at_scale("data/computer/ds1.png", screen_width, screen_height - 100, false).unwrap();
-    
+        // add preview image
         let preview_img = Image::new_from_pixbuf(&img_pixbuf);
         let gesture_drag = GestureMultiPress::new(&window);
-
+        // load rgb image
         let img = image::open("data/computer/ds1.png").unwrap();
         let (width_img, height_img) = img.dimensions();
         let unit_width = (width_img as f64) / (screen_width as f64);
         let unit_height = (height_img as f64) / ((screen_height - 100) as f64);
         println!("init : uw:{}, uh:{}",unit_width ,unit_height);
-
+        // load gray image
         let img_gray = image::open("data/computer/ds2.png").unwrap();
-        let mut dof = cayon::get_dof(&img_gray);
-        let mut coc = cayon::get_coc(&mut dof, 0, 0, width_img as i32, height_img as i32);
+        let dof = Vec::new();
+        let coc = Vec::new();
         let pathname = "data/computer".to_string();
         vbox.add(&preview_img);
         vbox.add(&filechooser_button);
         vbox.add(&blur_button);
         vbox.add(&exit_button);
         window.add(&vbox);
-
         window.fullscreen();
 
         // Connect the signal `delete_event` to send the `Quit` message.
@@ -219,25 +208,3 @@ impl Widget for Win {
         }
     }
 }
-
-// fn main() {
-//     let img = image::open("data/ds1.png").unwrap();
-//     let img_gray = image::open("data/ds2.png").unwrap();
-//     let (width, height) = img.dimensions();
-//     let (width, height) = (width as i32, height as i32);
-
-//     let start_time = time::get_time().sec;
-
-//     // let mipmap_level: [f32; 5] = [1.46, 3.05, 6.2, 13.05, 24.83];
-//     // let mut pathblur: [String; 5] = ["data/dst1.bmp".to_string(), "data/dst2.bmp".to_string(), "data/dst3.bmp".to_string(), "data/dst4.bmp".to_string(), "data/dst5.bmp".to_string()];
-//     // let mut pathdown: [String; 5] = ["data/dst_downsize1.bmp".to_string(), "data/dst_downsize2.bmp".to_string(), "data/dst_downsize3.bmp".to_string(), "data/dst_downsize4.bmp".to_string(), "data/dst_downsize5.bmp".to_string()];
-//     let _ = cayon::downsize(&img, 0);
-
-//     let mut dof = cayon::get_dof(&img_gray);
-//     let mut coc = cayon::get_coc(&mut dof, 0, 0, width, height);
-//     let new_img = cayon::render(&img, &mut coc);
-//     let _result = new_img.save("data/dst_haha.bmp");
-
-//     let end_time = time::get_time().sec;
-//     println!("time = {:?}", end_time - start_time);
-// }
