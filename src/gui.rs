@@ -2,6 +2,7 @@ extern crate gtk;
 extern crate gdk;
 extern crate gdk_pixbuf;
 extern crate image;
+extern crate time;
 
 use relm::{Relm, Update, Widget};
 use gtk::Orientation::{Vertical};
@@ -120,8 +121,12 @@ impl Update for Win {
                 println!("Click: self.model.pathname: {:?}", self.model.pathname);
                 self.model.dof = cayon::get_dof(&self.model.img_gray);
                 self.model.coc = cayon::get_coc(&mut self.model.dof, (x * self.model.unit_width) as i32, (y * self.model.unit_height) as i32, self.model.width_img as i32, self.model.height_img as i32);
+                
+                let start_time = time::get_time().sec;
                 let new_img = cayon::render(&self.model.img, &mut self.model.coc, &self.model.pathname);
-                println!("end of render");
+                let end_time = time::get_time().sec;
+                println!("end of render, spend time: {}s", end_time - start_time);
+                
                 let rendered_path = "data/lam.bmp";
                 let _result = new_img.save(&rendered_path);
                 let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&rendered_path, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
@@ -139,7 +144,7 @@ impl Widget for Win {
         self.widgets.window.clone()
     }
 
-    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
+    fn view(relm: &Relm<Self>, _model: Self::Model) -> Self {
 
         // regard as constructor 
         // Create a box

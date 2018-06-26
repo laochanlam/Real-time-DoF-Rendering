@@ -28,7 +28,7 @@ pub fn get_dof <I: GenericImage> (img: &I) -> Vec<i32>
         }
     }
 
-    let scale = ((max - min) as f64) / 255.0;
+    let _scale = ((max - min) as f64) / 255.0;
     // println!("scale = {}", scale);
     for i in 0.._size {
         // dof[i] = ((dof[i] as f64) / scale) as i32;
@@ -80,6 +80,7 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
     coc
 }
 
+#[allow(dead_code)]
 pub fn copy_from_gi<I: GenericImage>(img: &I)
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>   
     where I::Pixel: 'static {
@@ -244,6 +245,7 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>, pathname: &Stri
     img_out
 }
 
+#[allow(dead_code)]
 #[allow(unused_assignments)]    // for temp_img
 pub fn downsize <I: GenericImage> (img: &I, level: u32) 
     -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>   
