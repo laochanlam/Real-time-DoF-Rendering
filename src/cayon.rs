@@ -31,7 +31,11 @@ pub fn get_dof <I: GenericImage> (img: &I) -> Vec<i32>
     let scale = ((max - min) as f64) / 255.0;
     // println!("scale = {}", scale);
     for i in 0.._size {
-        dof[i] = ((dof[i] as f64) / scale) as i32;
+        // dof[i] = ((dof[i] as f64) / scale) as i32;
+
+        if dof[i] == 0 {
+            dof[i] = 255;
+        }
     }
 
     // return
@@ -44,15 +48,14 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
     let mut coc: Vec<i32> = vec![0; _size];
     let opos = ox * height + oy;
     let odof = dof[opos as usize];
+    let mut min_c = 200; 
 
     for x in 0..width {
         for y in 0..height {
             let pos = (x*height + y) as usize;
-            let mut radius = 1;
             let mut dis = dof[pos] - odof;
 
             if dis < 0 {
-                radius = -1;
                 dis = dis * -1;
             }
 
@@ -61,11 +64,15 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
                 dis = dis + 1;
             }
 
-            radius = radius * dis;
-            coc[pos] = radius;
+            coc[pos] = dis;
+            if dis < min_c {
+                min_c = dis;
+            }
             // assert_eq!(a[a.len()-1], 0);
         }
     }
+
+    println!("min_c = {}", min_c);
 
     // return
     coc
@@ -171,9 +178,9 @@ pub fn render <I: GenericImage> (img: &I, radius: &mut Vec<i32>)
                     let _pos = (x * height + y) as usize;
                     let r: i32 = radius[_pos as usize] as i32;
                     let x_left:  i32 = x - (r-1)/2;
-                    let x_right: i32 = x + (r-1)/2;
+                    let x_right: i32 = x + (r-1)/2 + 1;
                     let y_left:  i32 = y - (r-1)/2;
-                    let y_right: i32 = y + (r-1)/2;
+                    let y_right: i32 = y + (r-1)/2 + 1;
 
                     for i in x_left..x_right {
                         for j in y_left..y_right {

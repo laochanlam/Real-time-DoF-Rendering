@@ -123,7 +123,7 @@ impl Update for Win {
             Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); 
                 // let img_gray = image::open("data/ds2.png").unwrap();
                 self.model.dof = cayon::get_dof(&self.model.img_gray);
-                self.model.coc = cayon::get_coc(&mut self.model.dof, 0, 0, self.model.width_img as i32, self.model.height_img as i32);
+                self.model.coc = cayon::get_coc(&mut self.model.dof, (x * self.model.unit_width) as i32, (y * self.model.unit_height) as i32, self.model.width_img as i32, self.model.height_img as i32);
                 // preview_img.
                 let new_img = cayon::render(&self.model.img, &mut self.model.coc);
                 let rendered_path = "data/lam.bmp";
