@@ -130,6 +130,7 @@ impl Update for Win {
                 self.model.coc = cayon::get_coc(&mut self.model.dof, (x * self.model.unit_width) as i32, (y * self.model.unit_height) as i32, self.model.width_img as i32, self.model.height_img as i32);
                 // preview_img.
                 let new_img = cayon::render(&self.model.img, &mut self.model.coc, &self.model.pathname);
+                println!("end of render");
                 let rendered_path = "data/lam.bmp";
                 let _result = new_img.save(&rendered_path);
                 let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&rendered_path, self.model.screen_width, self.model.screen_height - 100, false).unwrap();

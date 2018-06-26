@@ -48,7 +48,8 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
     let mut coc: Vec<i32> = vec![0; _size];
     let opos = ox * height + oy;
     let odof = dof[opos as usize];
-    let mut min_c = 200; 
+    let mut min_c = 255;
+    let mut max_c = 0; 
 
     for x in 0..width {
         for y in 0..height {
@@ -65,14 +66,15 @@ pub fn get_coc (dof: &mut Vec<i32>, ox: i32, oy: i32, width: i32, height: i32) -
             }
 
             coc[pos] = dis;
-            if dis < min_c {
-                min_c = dis;
-            }
+
+            if dis < min_c { min_c = dis; }
+            if dis > max_c { max_c = dis; }
             // assert_eq!(a[a.len()-1], 0);
         }
     }
 
     println!("min_c = {}", min_c);
+    println!("max_c = {}", max_c);
 
     // return
     coc
