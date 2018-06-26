@@ -154,7 +154,7 @@ impl Widget for Win {
         self.widgets.window.clone()
     }
 
-    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
+    fn view(relm: &Relm<Self>, _model: Self::Model) -> Self {
 
         // regard as constructor 
         // Create a box
@@ -180,7 +180,7 @@ impl Widget for Win {
 
         let img_gray = image::open("data/computer/ds2.png").unwrap();
         let mut dof = cayon::get_dof(&img_gray);
-        let mut coc = cayon::get_coc(&mut dof, 0, 0, width_img as i32, height_img as i32);
+        let coc = cayon::get_coc(&mut dof, 0, 0, width_img as i32, height_img as i32);
         let pathname = "data/computer".to_string();
         vbox.add(&preview_img);
         vbox.add(&filechooser_button);
