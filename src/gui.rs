@@ -102,11 +102,12 @@ impl Update for Win {
             Msg::Quit => gtk::main_quit(),
             Msg::ChooseFile => {
                 let pathname = filechooser_button.get_filename().unwrap().into_os_string().into_string().unwrap();
-
-                let img = image::open(&pathname).unwrap();
-                // TODO: path of gray
-                // let img_gray = image::open("data/ds2.png").unwrap();
-                let (width_img, height_img) = img.dimensions();
+                let img_pathname = pathname.clone() + "/ds1.png";
+                let gray_pathname = pathname.clone() + "/ds2.png";
+                println!("{}", img_pathname);
+                self.model.img = image::open(&img_pathname).unwrap();
+                self.model.img_gray = image::open(&gray_pathname).unwrap();
+                let (width_img, height_img) = self.model.img.dimensions();
                 self.model.width_img = width_img;
                 self.model.height_img = height_img;
                 self.model.unit_width = (width_img as f64) / (self.model.screen_width as f64);
@@ -114,25 +115,29 @@ impl Update for Win {
                 println!("uw:{}, uh:{}",self.model.unit_width ,self.model.unit_height);
 
                 // range 1280~ (800 - 100)
-                let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&pathname, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
+                let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&img_pathname, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
                 preview_img.set_from_pixbuf(&new_img_pixbuf);
                 self.widgets.window.fullscreen();
-                println!("{}", pathname);
+                // println!("{}", pathname);
             },
             Msg::Blur => {},
             Msg::Click(x, y) => { println!("y:{}, x:{}",x * self.model.unit_width, y * self.model.unit_height); 
                 // let img_gray = image::open("data/ds2.png").unwrap();
+                print!("hererrr");
                 self.model.dof = cayon::get_dof(&self.model.img_gray);
+                print!("her2e");
                 self.model.coc = cayon::get_coc(&mut self.model.dof, (x * self.model.unit_width) as i32, (y * self.model.unit_height) as i32, self.model.width_img as i32, self.model.height_img as i32);
+                print!("herccce");
                 // preview_img.
                 let new_img = cayon::render(&self.model.img, &mut self.model.coc);
+                print!("here");
                 let rendered_path = "data/lam.bmp";
+                print!("here2");
                 let _result = new_img.save(&rendered_path);
                 let new_img_pixbuf = Pixbuf::new_from_file_at_scale(&rendered_path, self.model.screen_width, self.model.screen_height - 100, false).unwrap();
                 preview_img.set_from_pixbuf(&new_img_pixbuf);
                 self.widgets.window.fullscreen();
                 // println!("coc:{:?}",self.model.coc);
-            
             }
         }
     }
@@ -152,24 +157,24 @@ impl Widget for Win {
         let vbox = gtk::Box::new(Vertical, 0);
         // Add botton into box
         let exit_button = Button::new_with_label("Exit");
-        let filechooser_button = FileChooserButton::new("Select", FileChooserAction::Open);
+        let filechooser_button = FileChooserButton::new("Select", FileChooserAction::SelectFolder);
         let blur_button = Button::new_with_label("Blur");
         let window = Window::new(WindowType::Toplevel);
 
         let screen_height = Screen::get_default().unwrap().get_height();
         let screen_width = Screen::get_default().unwrap().get_width();
-        let img_pixbuf = Pixbuf::new_from_file_at_scale("data/ds1.png", screen_width, screen_height - 100, false).unwrap();
+        let img_pixbuf = Pixbuf::new_from_file_at_scale("data/computer/ds1.png", screen_width, screen_height - 100, false).unwrap();
     
         let preview_img = Image::new_from_pixbuf(&img_pixbuf);
         let gesture_drag = GestureMultiPress::new(&window);
 
-        let img = image::open("data/ds1.png").unwrap();
+        let img = image::open("data/computer/ds1.png").unwrap();
         let (width_img, height_img) = img.dimensions();
         let unit_width = (width_img as f64) / (screen_width as f64);
         let unit_height = (height_img as f64) / ((screen_height - 100) as f64);
         println!("init : uw:{}, uh:{}",unit_width ,unit_height);
 
-        let img_gray = image::open("data/ds2.png").unwrap();
+        let img_gray = image::open("data/computer/ds2.png").unwrap();
         let mut dof = cayon::get_dof(&img_gray);
         let mut coc = cayon::get_coc(&mut dof, 0, 0, width_img as i32, height_img as i32);
 
